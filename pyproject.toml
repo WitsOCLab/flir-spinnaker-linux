@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flir-spinnaker-linux"
+version = "0.1.0"
+description = "Teledyne FLIR Spinnaker SDK cameras from Python through libSpinnaker_C and ctypes: any Python version, no PySpin wheel"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["FLIR", "Teledyne", "Spinnaker", "Blackfly", "PySpin", "camera", "GenICam", "ctypes", "machine vision"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Multimedia :: Graphics :: Capture",
+    "Intended Audience :: Science/Research",
+]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
