@@ -15,7 +15,7 @@ If you use this in published work, please cite the repository (see CITATION.cff)
 
 1. Install the Spinnaker SDK from Teledyne (the Ubuntu .deb; the 22.04 build also runs on 24.04). Its installer adds the udev rule and the `flirimaging` group.
 2. `echo 1000 | sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb` for long bursts (the SDK's install script offers to make this permanent).
-3. `pip install flir-spinnaker-linux`, then `flir-spinnaker list`.
+3. `pip install flir-spinnaker-linux` (before the PyPI release: `pip install git+https://github.com/WitsOCLab/flir-spinnaker-linux`), then `flir-spinnaker list`.
 
 Tested with a Blackfly S BFS-U3-19S4C over USB 3 on Pop!_OS 24.04: 119 frames/s at full resolution, no dropped frames in bursts of 300, checked by the camera's frame counter.
 
