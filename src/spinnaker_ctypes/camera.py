@@ -12,6 +12,7 @@ the camera's full frame rate instead of triggering each frame, and they too star
 from __future__ import annotations
 
 import ctypes as C
+import os
 import time
 
 import numpy as np
@@ -29,14 +30,18 @@ class _Lib:
 
     def __init__(self):
         last = None
-        for name in ("libSpinnaker_C.so.4", "/opt/spinnaker/lib/libSpinnaker_C.so.4"):
+        # SPINNAKER_LIB names the library file for an SDK installed somewhere other than /opt/spinnaker.
+        candidates = [os.environ["SPINNAKER_LIB"]] if os.environ.get("SPINNAKER_LIB") else []
+        for name in candidates + ["libSpinnaker_C.so.4", "/opt/spinnaker/lib/libSpinnaker_C.so.4",
+                                  "libSpinnaker_C.so.3", "/opt/spinnaker/lib/libSpinnaker_C.so.3"]:
             try:
                 self.lib = C.CDLL(name)
                 break
             except OSError as e:
                 last = e
         else:
-            raise SpinnakerError(f"cannot load libSpinnaker_C.so.4 (is the Spinnaker SDK installed?): {last}") from None
+            raise SpinnakerError("cannot load libSpinnaker_C (is the Spinnaker SDK installed? set SPINNAKER_LIB to the .so "
+                                 f"if it is elsewhere): {last}") from None
 
     def __getattr__(self, name: str):
         fn = getattr(self.lib, name)
@@ -199,6 +204,40 @@ class Camera:
                 self._drain(20)                                     # ... must not be mistaken for the next triggered frame
         self.last_info = self._info("burst", ids, stamps)
         return frames
+
+    @staticmethod
+    def list() -> list[dict]:
+        """Every camera the SDK can see, without opening any: [{"serial", "model"}]."""
+        s = _Lib()
+        system, cameras = C.c_void_p(), C.c_void_p()
+        s.spinSystemGetInstance(C.byref(system))
+        found = []
+        try:
+            s.spinCameraListCreateEmpty(C.byref(cameras))
+            s.spinSystemGetCameras(system, cameras)
+            count = C.c_size_t()
+            s.spinCameraListGetSize(cameras, C.byref(count))
+            for i in range(count.value):
+                cam, nodemap = C.c_void_p(), C.c_void_p()
+                s.spinCameraListGet(cameras, i, C.byref(cam))
+                try:
+                    s.spinCameraGetTLDeviceNodeMap(cam, C.byref(nodemap))   # readable without CameraInit
+                    entry = {}
+                    for key, node in (("serial", "DeviceSerialNumber"), ("model", "DeviceModelName")):
+                        h = C.c_void_p()
+                        s.spinNodeMapGetNode(nodemap, node.encode(), C.byref(h))
+                        buf, n = C.create_string_buffer(256), C.c_size_t(256)
+                        s.spinNodeToString(h, buf, C.byref(n))
+                        entry[key] = buf.value.decode(errors="replace")
+                    found.append(entry)
+                finally:
+                    s.spinCameraRelease(cam)
+        finally:
+            if cameras:
+                s.spinCameraListClear(cameras)
+                s.spinCameraListDestroy(cameras)
+            s.spinSystemReleaseInstance(system)
+        return found
 
     @staticmethod
     def _info(mode: str, ids: list[int], stamps: list[int]) -> dict:
