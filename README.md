@@ -60,6 +60,10 @@ cam.close();
 * Frames drop in long bursts: `usbfs_memory_mb` is at its default 16; see Install.
 * Nothing found by `list` but `lsusb` shows `1e10:`: you are not in the `flirimaging` group, or another program (SpinView) holds the camera.
 
+## Disclaimer
+
+Not affiliated with or endorsed by Teledyne FLIR. "FLIR", "Spinnaker" and "Blackfly" are trademarks of Teledyne FLIR, used here only to say which hardware and SDK this works with. The Spinnaker SDK is Teledyne's software under Teledyne's licence and none of it is included: install it from Teledyne and accept their terms. This package only calls the SDK's public C API, the one its own headers and examples document.
+
 ## License
 
 MIT. Copyright (c) 2026 Wits OC Lab. See LICENSE.
